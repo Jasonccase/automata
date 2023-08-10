@@ -16,7 +16,7 @@ dev_grid =[ [0,0,0,0,0],
 			[0,0,0,0,0],
 		 	[0,0,0,0,0]]
 
-size = (20,60)
+size = (25,75)
 speed = 0.25
 
 class tile:
@@ -30,27 +30,27 @@ class plant:
 	def __init__(self,yx):
 		self.yx = yx
 		self.type = 1
-		self.neighbors = []
 		self.sprite = '▒'
 
 	def surroundings(self,grid,mask):
+		self.neighbors = []
 		for coord in mask:
 			self.y,self.x = self.yx
 			self.y,self.x = self.yx[0]+coord[0],self.yx[1]+coord[1]
 			if self.y >= 0 and self.x >= 0 and self.y < len(grid) and self.x < len(grid[0]):
 				self.y = ((self.y + len(grid)) % len(grid))
 				self.x = ((self.x + len(grid[0])) % len(grid[0]))
-				self.neighbors.append(grid[self.y][self.x])
-			
+				self.neighbors.append(grid[self.y][self.x])	
 		return
 
 	def reproduce(self,grid):
+		tgrid = [row for row in grid]
 		r = np.random.randint(0,5)
 		if r == 4:
 			cell = np.random.choice(self.neighbors)
 			if cell.type == 0:
-				grid[cell.y][cell.x] = plant((cell.y,cell.x))
-		return grid
+				tgrid[cell.yx[0]][cell.yx[1]] = plant((cell.yx[0],cell.yx[1]))
+		return tgrid
 
 	def update(self,grid,mask):
 		self.surroundings(grid,mask)
@@ -147,20 +147,23 @@ def show(grid):
 	return
 
 def simulate(grid):
+	#ngrid = [row for row in grid]
+	ngrid = copy.deepcopy(grid)
 	for row in grid:
 		for cell in row:
 			if cell.type != 0:
-				grid = cell.update(grid,mask)
+				ngrid = cell.update(ngrid,mask)
+	return ngrid
 
 grid = generate_grid(size)
 grid[int(size[0]/2)][int(size[1]/2)] = 1
 grid = parse(grid)
 
-for i in range(100):
+for i in range(150):
 	Console().clear()
 	show(grid)
 	print(f'generation - {i+1}')
-	simulate(grid)
+	grid = simulate(grid)
 	time.sleep(speed)
 
 
