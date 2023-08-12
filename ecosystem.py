@@ -10,17 +10,17 @@ mask = [(-1,-1),(-1,0),(-1,1),
 
 orientations = [(0,1),(1,0),(0,-1),(-1,0)]
 
-dev_grid =[ [0,0,0,0,0],
-		 	[0,1,1,1,0],
-		 	[0,1,2,1,0],
-			[0,1,1,1,0],
-		 	[0,0,0,0,0]]
+dev_grid =[ [0,0,0,0,0,0,0,0,0],
+		 	[0,1,1,1,1,1,1,1,0],
+		 	[0,1,2,1,2,1,2,1,0],
+			[0,1,1,1,1,1,1,1,0],
+		 	[0,0,0,0,0,0,0,0,0]]
 
 sheep_count = 0
 grass_count = 0
 simtime = 0
 size = (25,75)
-speed = 0
+speed = 0.05
 
 class tile:
 	def __init__(self,yx):
@@ -33,6 +33,7 @@ class plant:
 	def __init__(self,yx):
 		self.yx = yx
 		self.type = 1
+		self.ntype = 1
 		self.ncheck = False
 		self.sprite = '▒'
 
@@ -61,7 +62,7 @@ class plant:
 		return rgrid
 
 	def update(self,ugrid,mask):
-		if self.type == 0:
+		if self.ntype == 0:
 			ugrid[self.yx[0]][self.yx[1]] = tile(self.yx)
 		self.surroundings(ugrid,mask)
 		ugrid = self.reproduce(ugrid)
@@ -71,7 +72,9 @@ class herbivore:
 	def __init__(self,yx):
 		self.yx = yx
 		self.type = 2
+		self.ntype = 2
 		self.age = 0
+		self.lifespan = 30
 		self.stamina = 2
 		self.rstamina = self.stamina
 		self.food = 0
@@ -111,7 +114,7 @@ class herbivore:
 				close_plants.append(cell)
 		if close_plants != []:
 			trg_plant = np.random.choice(close_plants)
-			trg_plant.type = 0
+			trg_plant.ntype = 0
 			self.food += 1
 		return
 
@@ -124,16 +127,17 @@ class herbivore:
 			else:
 				self.food -= 3
 		return 
+		
 	def update(self,ugrid,mask):
 		#print(self.age,self.food)
 		self.age += 1
-		if self.type == 0:
-			ugrid[self.yx[0]][self.yx[1]] = tile(self.yx)
+		#if self.ntype == 0:
+		#	ugrid[self.yx[0]][self.yx[1]] = tile(self.yx)
 		self.surroundings(ugrid,mask)
 		self.eat()
 		self.reproduce(ugrid)
 		ugrid = self.move(ugrid)
-		if self.age > 50:
+		if self.age >= self.lifespan:
 			ugrid[self.yx[0]][self.yx[1]] = tile(self.yx)
 		return ugrid
 
@@ -217,6 +221,7 @@ def simulate(sgrid):
 
 grid = generate_grid(size)
 grid = splice(dev_grid,(int(len(grid)/2),int(len(grid[0])/2)),grid)
+#grid = dev_grid
 grid = parse(grid)
 
 for i in range(5000):
@@ -225,7 +230,7 @@ for i in range(5000):
 	print(f'generation - {i+1}  sheep - {sheep_count}  grass - {grass_count}')
 	print(f'sim time - {simtime*100}')
 	grid,simtime,grass_count,sheep_count = simulate(grid)
-	#time.sleep(speed)
+	time.sleep(speed)
 
 
 
